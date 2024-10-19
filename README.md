@@ -149,4 +149,4 @@ En el archivo ipynb tuvo un tiempo de solución de 3.97 segundos.
 
 Y con el código con la heurística, paso a solucionarlo en 1.39 segundos 
 
-mejoraron significativamente los tiempos de solución del sudoku 
+Hemos notado que las dos formas con bactraking y MRV sacan tiempos parecidos en pruebas con otros sudokus de mayo dificultad.
