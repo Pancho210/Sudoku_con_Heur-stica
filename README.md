@@ -3,134 +3,150 @@
 Código de solución de sudoku con una heurística 
 El código en general se encuentra documentado, pero para un mejor entendimiento del código se 
 Agregará este apartado.
------------------
-## Importar librerías
 
-  import time
+La heurística que se aplicó al código fue: MRV
 
-Se importa la librería time para poder medir cuánto tiempo toma resolver el Sudoku. Esto es útil para evaluar el rendimiento del algoritmo.
-----------------------
-## Definir el tamaño del Sudoku
 
-  N = 9
+Integrantes de la solucion:
 
-Aquí se define el tamaño del Sudoku, que es un tablero de 9x9 (9 filas y 9 columnas). Esto es estándar para los Sudokus.
-----------------------------------
-## Función para imprimir el Sudoku
+- Francisco Calisto
+- Francisca Gutierrez
 
-  def printing(arr):
-    """Imprime el tablero de Sudoku"""
-    for i in range(N):
-        for j in range(N):
-            print(arr[i][j], end=" ")
-        print()
+--------------------------
 
-Esta función printing toma como entrada un arreglo arr que representa el tablero del Sudoku.
-Recorre el tablero y muestra cada valor de la fila, separando las celdas por espacios.
-Cada fila se imprime en una nueva línea.
+Explicación del Código
 
-## Verificar si es seguro colocar un número en una celda
+ ### 1. Importaciones
 
-  def isSafe(grid, row, col, num):
-    """Verifica si es seguro asignar un número en una celda específica"""
-    if num in grid[row]:  # Revisar la fila
-        return False
-    if num in [grid[i][col] for i in range(N)]:  # Revisar la columna
-        return False
-    startRow, startCol = row - row % 3, col - col % 3  # Subcuadrante 3x3
-    for i in range(3):
-        for j in range(3):
-            if grid[i + startRow][j + startCol] == num:
+    import time
+
+Solo se utiliza la biblioteca time para medir el tiempo de ejecución del algoritmo.
+
+### 2. Definición de Constantes
+   
+       N = 9  # Tamaño del tablero de Sudoku (9x9)
+
+El tamaño del tablero de Sudoku es fijo y tiene dimensiones 9x9, lo cual es estándar para este tipo de puzzles.
+
+### 3. Función de Impresión del Tablero
+
+       def printing(arr):
+        print("┌───────┬───────┬───────┐")
+        for i in range(N):
+            for j in range(N):
+                if j % 3 == 0:
+                    print("│", end=" ")
+                print(arr[i][j] if arr[i][j] != 0 else ".", end=" ")
+            print("│")
+            if (i + 1) % 3 == 0 and i != N - 1:
+                print("├───────┼───────┼───────┤")
+        print("└───────┴───────┴───────┘")
+
+Propósito: Imprime el tablero de Sudoku en un formato claro y visualmente organizado, con un recuadro que delimita los subcuadrantes 3x3.
+
+Detalles: Las celdas vacías se representan con un punto (.) para facilitar la visualización.
+
+### 4. Verificación de Celdas Seguras (isSafe)
+   
+        def isSafe(grid, row, col, num):
+            if num in grid[row]:
                 return False
-    return True
+            if num in [grid[i][col] for i in range(N)]:
+                return False
+            startRow, startCol = row - row % 3, col - col % 3
+            for i in range(3):
+                for j in range(3):
+                    if grid[i + startRow][j + startCol] == num:
+                        return False
+            return True
 
-La función isSafe revisa si es seguro colocar un número num en la posición (row, col) del tablero:
-- Revisar la fila: Comprueba si el número num ya está presente en la fila correspondiente. Si es así, no es seguro colocar el número.
-- Revisar la columna: Verifica si el número num está en la columna. Si está, no se puede colocar.
-- Revisar el subcuadrante 3x3: Cada tablero de Sudoku se divide en 9 subcuadrantes de 3x3. Esta parte calcula el subcuadrante al que pertenece la celda y revisa si el número ya está en este área.
-- 
-Si ninguna de estas condiciones se cumple, entonces es seguro colocar el número y la función devuelve True.
+Propósito: Determina si un número puede ser colocado en una celda específica, verificando:
+- La fila.
+- La columna.
+- El subcuadrante 3x3.
 
-## Heurística MRV (Minimum Remaining Values)
+### 5. Heurística de Valores Mínimos Restantes (MRV)
+        
+        def findEmptyCell(grid):
+            min_options = 10
+            best_row, best_col = -1, -1
+            for row in range(N):
+                for col in range(N):
+                    if grid[row][col] == 0:
+                        options = sum(1 for num in range(1, N+1) if isSafe(grid, row, col, num))
+                        if options < min_options:
+                            min_options = options
+                            best_row, best_col = row, col
+            return best_row, best_col
 
-  def findEmptyCell(grid):
-    """Encuentra la celda vacía con menos opciones (heurística MRV)"""
-    min_options = 10  # Más que el máximo número de opciones posibles
-    best_row, best_col = -1, -1
-    
-    for row in range(N):
-        for col in range(N):
-            if grid[row][col] == 0:  # Encontrar una celda vacía
-                options = sum(1 for num in range(1, N+1) if isSafe(grid, row, col, num))
-                if options < min_options:
-                    min_options = options
-                    best_row, best_col = row, col
-    
-    return best_row, best_col
+Propósito: Implementa la heurística MRV, que selecciona la celda vacía con la menor cantidad de opciones posibles. Esto reduce el espacio de búsqueda y acelera la solución.
 
-La heurística MRV se usa para mejorar la eficiencia del algoritmo de backtracking.
-En vez de elegir celdas vacías al azar, findEmptyCell busca la celda vacía con menos opciones posibles (es decir, el número más bajo de valores válidos que se pueden colocar allí).
-Recorre el tablero buscando celdas vacías (aquellas donde el valor es 0) y cuenta cuántas opciones válidas tiene cada celda usando la función isSafe.
-Devuelve la celda (row, col) con menos opciones válidas.
+Detalles: Para cada celda vacía, calcula cuántos números del 1 al 9 podrían colocarse de manera segura. Elige la celda con menos posibilidades.
 
-## Resolver el Sudoku utilizando Backtracking con MRV
+### 6. Algoritmo de Búsqueda con Backtracking
 
-  def solveSudoku(grid):
-    """Resuelve el Sudoku utilizando backtracking y MRV"""
-    row, col = findEmptyCell(grid)  # Usar MRV para elegir la siguiente celda
-    
-    if row == -1 and col == -1:  # Si no hay más celdas vacías, está resuelto
-        return True
-    
-    for num in range(1, N + 1):
-        if isSafe(grid, row, col, num):
-            grid[row][col] = num  # Asignar el número
-            if solveSudoku(grid):
+        def solveSudoku(grid):
+            row, col = findEmptyCell(grid)
+            if row == -1 and col == -1:
                 return True
-            grid[row][col] = 0  # Revertir si no funciona
-    
-    return False
+            for num in range(1, N + 1):
+                if isSafe(grid, row, col, num):
+                    grid[row][col] = num
+                    if solveSudoku(grid):
+                        return True
+                    grid[row][col] = 0
+            return False
 
-solveSudoku es la función principal que resuelve el Sudoku utilizando backtracking (una técnica que prueba soluciones y retrocede si encuentra un error) y la heurística MRV.
-Primero, encuentra una celda vacía usando MRV (función findEmptyCell). Si no encuentra ninguna (lo que significa que el Sudoku está completo), devuelve True, indicando que ha sido resuelto.
-Si encuentra una celda vacía, prueba colocar cada número del 1 al 9 en esa celda. Cada vez que coloca un número, verifica si es seguro usar ese número (isSafe).
-Si una asignación es válida, llama recursivamente a solveSudoku para intentar resolver el tablero con esa nueva asignación.
-Si una asignación no lleva a una solución válida, se revierte el número (se vuelve a poner en 0) y se prueba el siguiente número.
-Si ningún número es válido, devuelve False, lo que hace que retroceda al paso anterior del algoritmo.
+Propósito: Utiliza backtracking para probar diferentes números en las celdas vacías. El algoritmo:
+- Encuentra la celda vacía más prometedora (usando MRV).
+- Intenta colocar un número válido.
+- Si encuentra un error, revierte el cambio (backtracking) y prueba otro número.
 
-## Grid de ejemplo (Tablero de Sudoku)
+### 7. Medición del Tiempo de Ejecución
 
-  grid = [[ 6, 0, 2, 0, 0, 0, 0, 0, 0],
-        [ 3, 0, 0, 0, 0, 2, 0, 5, 0],
-        [ 0, 4, 0, 3, 0, 0, 0, 7, 0],
-        [ 0, 8, 0, 4, 0, 0, 0, 9, 0],
-        [ 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [ 0, 3, 0, 0, 1, 0, 0, 0, 5],
-        [ 0, 0, 0, 2, 0, 0, 0, 0, 6],
-        [ 0, 6, 8, 0, 0, 4, 0, 0, 1],
-        [ 0, 5, 0, 9, 0, 0, 0, 0, 8]]
+        start_time = time.time()
+        
+        if solveSudoku(grid):
+            printing(grid)
+        else:
+            print("No tiene solución")
+        
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print(f"\nTiempo de ejecución: {execution_time} segundos")
 
-Este es el tablero de Sudoku con algunas celdas ya completadas. Los 0 representan las celdas vacías que necesitan ser llenadas.
+Propósito: Mide y muestra el tiempo de ejecución del algoritmo. Esto es importante para evaluar la eficiencia del agente inteligente.
 
-## Medir el tiempo de ejecución
+Detalles: El tiempo se mide en segundos y muestra cuánto demora el algoritmo en converger (resolver el Sudoku).
 
-  start_time = time.time()
+### 8. Tablero de Sudoku de Entrada
+
+        grid = [[ 6, 0, 2, 0, 0, 0, 0, 0, 0],
+                [ 3, 0, 0, 0, 0, 2, 0, 5, 0],
+                [ 0, 4, 0, 3, 0, 0, 0, 7, 0],
+                [ 0, 8, 0, 4, 0, 0, 0, 9, 0],
+                [ 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [ 0, 3, 0, 0, 1, 0, 0, 0, 5],
+                [ 0, 0, 0, 2, 0, 0, 0, 0, 6],
+                [ 0, 6, 8, 0, 0, 4, 0, 0, 1],
+                [ 0, 5, 0, 9, 0, 0, 0, 0, 8]]
 
 
-Antes de empezar a resolver el Sudoku, usamos time.time() para guardar el tiempo de inicio. Esto nos ayudará a medir cuánto tiempo toma resolverlo.
+----------------------------
 
-## Resolver el Sudoku y medir el tiempo
+## Codigos
 
-  if solveSudoku(grid):
-    printing(grid)
-  else:
-    print("No tiene solucion")
+Cabe agregar que el código presentado de las clases no contaba con una heurística.
+La forma en la que relizaba la solución era por medio de backtracking.
 
-  end_time = time.time()
-  execution_time = end_time - start_time
-  print(f"\nTiempo de ejecución: {execution_time} segundos")
+A esa versión se le agregó la heurística: Minimum Remaining Values (MRV).
+Que consiste en elegir la celda vacía con el menor número de opciones disponibles.
+Agregar esta heuritica al algotimo ayudo a que los tiempos de de solucion del agoritmos
+Se redujerán significativamente 
 
-Llamamos a solveSudoku con el tablero inicial.
-Si lo resuelve, muestra el tablero completo usando la función printing.
-Si no puede encontrar una solución, imprime "No tiene solución".
-Finalmente, calculamos el tiempo total de ejecución restando el tiempo de inicio del tiempo final, y lo imprimimos.
+La versión anterior del código con el sudoku que se encuentra agregado 
+En el archivo ipynb tuvo un tiempo de solución de 3.97 segundos.
+
+Y con el código con la heurística, paso a solucionarlo en 1.39 segundos 
+
+mejoraron significativamente los tiempos de solución del sudoku 
